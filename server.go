@@ -121,7 +121,7 @@ func (p *Problem) create() error {
 	} else if atcoderSpecifier != -1 {
 		problemName = p.Name[:atcoderSpecifier-1]
 	}
-    err := FromTemplate(MAIN_TEMPLATE_PATH, problemName)
+	err := FromTemplate(MAIN_TEMPLATE_PATH, problemName)
 	if err != nil {
 		return err
 	}

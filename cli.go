@@ -111,10 +111,10 @@ func (c *Cli) Execute() {
 			fmt.Println(err)
 		}
 	case StressTest:
-        err := c.stressTest()
-        if err != nil {
-            fmt.Println(err)
-        }
+		err := c.stressTest()
+		if err != nil {
+			fmt.Println(err)
+		}
 	case StressFiles:
 		err := c.stressFiles()
 		if err != nil {
@@ -183,8 +183,8 @@ func (c *Cli) compile(debug bool) error {
 		arg := strings.Split(flags, " ")
 		cmd = exec.Command("g++", arg...)
 	}
-    var stderr bytes.Buffer
-    cmd.Stderr = &stderr
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
 		return errors.New(stderr.String())
@@ -234,76 +234,76 @@ func (c *Cli) parse() error {
 }
 
 func runStress(file string, out string) error {
-    input, err := os.ReadFile("int")
-    if err != nil {
-        return err
-    }
-    cmd := exec.Command("./" + file)
-    var stdout bytes.Buffer
-    cmd.Stdin = bytes.NewBuffer(input)
-    cmd.Stdout = &stdout
-    err = cmd.Run();
+	input, err := os.ReadFile("int")
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command("./" + file)
+	var stdout bytes.Buffer
+	cmd.Stdin = bytes.NewBuffer(input)
+	cmd.Stdout = &stdout
+	err = cmd.Run()
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    err = os.WriteFile(out, stdout.Bytes(), 0666)
-    if err != nil {
-        return err
-    }
+	err = os.WriteFile(out, stdout.Bytes(), 0666)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (c *Cli) stressTest() error {
 	fmt.Printf("Running in stress test mode\n")
-    testCase := 0
-    for {
-        fmt.Printf("Running test %d\n", testCase)
-        cmd := exec.Command("./gen")
+	testCase := 0
+	for {
+		fmt.Printf("Running test %d\n", testCase)
+		cmd := exec.Command("./gen")
 
-        var input bytes.Buffer
-        cmd.Stdout = &input
-        err := cmd.Run();
+		var input bytes.Buffer
+		cmd.Stdout = &input
+		err := cmd.Run()
 
-        if err != nil {
-            return err
-        }
+		if err != nil {
+			return err
+		}
 
-        err = os.WriteFile("int", input.Bytes(), 0666)
-        if err != nil {
-            return err
-        }
+		err = os.WriteFile("int", input.Bytes(), 0666)
+		if err != nil {
+			return err
+		}
 
-        err = runStress("brute", "out1")
-        if err != nil {
-            return err
-        }
+		err = runStress("brute", "out1")
+		if err != nil {
+			return err
+		}
 
-        err = runStress(c.FileName, "out2")
-        if err != nil {
-            return err
-        }
+		err = runStress(c.FileName, "out2")
+		if err != nil {
+			return err
+		}
 
-        out1, err := os.ReadFile("out1")
-        if err != nil {
-            return err
-        }
+		out1, err := os.ReadFile("out1")
+		if err != nil {
+			return err
+		}
 
-        out2, err := os.ReadFile("out2")
-        if err != nil {
-            return err
-        }
-        if string(out1) != string(out2) {
-            fmt.Println("Test case failed:")
-            fmt.Println(input.String())
-            fmt.Printf("Expected:\n %s\n", out1)
-            fmt.Printf("Got:\n %s\n", out2)
-            os.Exit(1)
-        }
-        testCase++
-    }
+		out2, err := os.ReadFile("out2")
+		if err != nil {
+			return err
+		}
+		if string(out1) != string(out2) {
+			fmt.Println("Test case failed:")
+			fmt.Println(input.String())
+			fmt.Printf("Expected:\n %s\n", out1)
+			fmt.Printf("Got:\n %s\n", out2)
+			os.Exit(1)
+		}
+		testCase++
+	}
 }
 
 // TODO: read from config file
@@ -319,7 +319,7 @@ func (c *Cli) template() error {
 }
 
 func FromTemplate(templatePath string, file string) error {
-    fmt.Printf("Generating %s\n", file)
+	fmt.Printf("Generating %s\n", file)
 	cmd := exec.Command("cp", templatePath, file)
 	err := cmd.Run()
 	if err != nil {
