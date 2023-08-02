@@ -3,7 +3,7 @@ A CLI tool build in Go for a more productive competitive programming experience.
 
 
 Available commands:
-* [ ] Help for all the commands
+* [X] Help for all the commands
 * [X] Compile a file
 * [X] Compile a file with debug flags
 * [X] Run your compiled file
