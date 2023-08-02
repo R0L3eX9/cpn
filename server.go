@@ -125,14 +125,14 @@ func (p *Problem) create() error {
 	if err != nil {
 		return err
 	}
-	err = p.testCases()
+	err = p.testCases(problemName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *Problem) testCases() error {
+func (p *Problem) testCases(problemName string) error {
 	fmt.Println("Generating test-cases")
 	err := os.Mkdir("test-cases", 0777)
 	if !os.IsExist(err) {
@@ -141,7 +141,7 @@ func (p *Problem) testCases() error {
 
 	for idx, test := range p.Tests {
 		fmt.Println("Creating test:", idx)
-		testName := p.Name + "-" + fmt.Sprint(idx)
+		testName := problemName + "-" + fmt.Sprint(idx)
 		err = test.create(testName)
 		if err != nil {
 			return err

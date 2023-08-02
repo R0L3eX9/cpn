@@ -22,6 +22,7 @@ const (
 	Parse
 	StressTest
 	StressFiles
+    TestCases
 	Template
 )
 
@@ -43,10 +44,12 @@ func toCliCommand(command string) CliCommand {
 		return Parse
 	case "stress-test", "st":
 		return StressTest
-	case "template", "temp":
-		return Template
 	case "stress-files", "sf":
 		return StressFiles
+    case "test-cases", "tc":
+        return TestCases
+	case "template", "temp":
+		return Template
 	default:
 		return Help
 	}
@@ -120,6 +123,11 @@ func (c *Cli) Execute() {
 		if err != nil {
 			fmt.Println(err)
 		}
+    case TestCases:
+        err := c.testCases()
+        if err != nil {
+            fmt.Println(err)
+        }
 	case Template:
 		err := c.template()
 		if err != nil {
@@ -128,7 +136,6 @@ func (c *Cli) Execute() {
 	}
 }
 
-// TODO: Complete with the rest of the commands
 func (c *Cli) help() {
 	fmt.Println("Usage: cpn [command] [file]")
 	fmt.Println()
@@ -136,12 +143,14 @@ func (c *Cli) help() {
 	fmt.Println("  help, h: Show this help")
 	fmt.Println("  run, r: Run the program")
 	fmt.Println("  compile, c: Compile the program")
-	fmt.Println("  debug, d: Run the program in debug mode")
+	fmt.Println("  debug, d: Compile the program in debug mode")
 	fmt.Println("  compile-run, cr: Compile and run the program")
 	fmt.Println("  debug-run, dr: Compile and run the program in debug mode")
-	fmt.Println("  parse: Parse the program")
-	fmt.Println("  stress-test: Run the program in stress test mode")
-	fmt.Println("  template: Generate a template")
+	fmt.Println("  parse: Parse the problem using Competitive Companion")
+	fmt.Println("  stress-test, st: Run the program in stress test mode")
+    fmt.Println("  stress-files, sf: Generate files needed for stress testing")
+	fmt.Println("  test-cases, tc: Test your program against parsed test-cases")
+	fmt.Println("  template: Generate a file from personal template")
 	fmt.Println()
 }
 
@@ -298,12 +307,15 @@ func (c *Cli) stressTest() error {
 		if string(out1) != string(out2) {
 			fmt.Println("Test case failed:")
 			fmt.Println(input.String())
-			fmt.Printf("Expected:\n %s\n", out1)
-			fmt.Printf("Got:\n %s\n", out2)
-			os.Exit(1)
+			fmt.Println("Expected:")
+            fmt.Println(out1)
+			fmt.Println("Got:")
+            fmt.Println(out2)
+            break
 		}
 		testCase++
 	}
+    return nil
 }
 
 // TODO: read from config file
@@ -339,4 +351,45 @@ func (c *Cli) stressFiles() error {
 	}
 	println("Stress test files created!")
 	return nil
+}
+
+func (c *Cli) testCases() error {
+	fmt.Printf("Running Test Cases\n")
+    testIdx := '0'
+    for {
+        input, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.in", c.FileName, testIdx))
+        if os.IsNotExist(err) {
+            break
+        }
+        expectedOutput, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.out", c.FileName, testIdx))
+        if os.IsNotExist(err) {
+            break
+        }
+
+        cmd := exec.Command(fmt.Sprintf("./%s", c.FileName))
+        stdin := bytes.NewBuffer(input)
+        var stdout bytes.Buffer
+        var stderr bytes.Buffer
+        cmd.Stdin = stdin
+        cmd.Stdout = &stdout
+        cmd.Stderr = &stderr
+        err = cmd.Run()
+        if err != nil {
+            log.Println(stderr)
+        }
+
+        userOutput := stdout.String()
+        if userOutput != string(expectedOutput) {
+            fmt.Printf("Failed on test %c\n", testIdx)
+            fmt.Println("Expected:")
+            fmt.Println(string(expectedOutput))
+            fmt.Println("Got:")
+            fmt.Println(userOutput)
+            break
+        }
+        fmt.Printf("Test %c passed!\n", testIdx)
+        testIdx++
+    }
+    fmt.Printf("Finished all %c Test Cases\n", testIdx)
+    return nil
 }
