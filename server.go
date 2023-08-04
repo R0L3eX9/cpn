@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -28,6 +29,7 @@ func (p *Parser) Listen() error {
 	server, err := net.Listen(p.ServerType, p.ServerHost+":"+p.ServerPort)
 
 	if err != nil {
+        log.Println("Server not listening!", err)
 		return err
 	}
 
@@ -36,6 +38,7 @@ func (p *Parser) Listen() error {
 	for {
 		connection, err := server.Accept()
 		if err != nil {
+            log.Println("Server didn't accept the request!", err)
 			return err
 		}
 
@@ -47,6 +50,7 @@ func (p *Parser) Listen() error {
 		}()
 
 		if <-errs != nil {
+            log.Println("Error while processing the client!", <-errs)
 			return <-errs
 		}
 	}
@@ -54,19 +58,23 @@ func (p *Parser) Listen() error {
 
 func processClient(client net.Conn) error {
 	defer client.Close()
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 2069)
 	_, err := client.Read(buffer)
 	if err != nil {
+        log.Println("Couldn't read buffer", err)
 		return err
 	}
 	problem, err := parseData(buffer)
 	if err != nil {
+        log.Println("Couldn't parse the data", err)
 		return err
 	}
 	err = problem.create()
 	if err != nil {
+        log.Println("Couldn't create the problem")
 		return err
 	}
+    fmt.Println("Problem created")
 	return nil
 }
 
@@ -100,7 +108,6 @@ func parseData(b []byte) (*Problem, error) {
 
 	processedData := string(data[problemStart : problemEnd+1])
 	processedData += "}"
-	fmt.Println("Marshaled data:", processedData)
 
 	var problem Problem
 	err := json.Unmarshal([]byte(processedData), &problem)
@@ -121,8 +128,9 @@ func (p *Problem) create() error {
 	} else if atcoderSpecifier != -1 {
 		problemName = p.Name[:atcoderSpecifier-1]
 	}
-	err := FromTemplate(MAIN_TEMPLATE_PATH, problemName)
+	err := FromTemplate(MAIN_TEMPLATE_PATH, problemName + ".cpp")
 	if err != nil {
+        log.Println(err)
 		return err
 	}
 	err = p.testCases(problemName)
@@ -133,20 +141,21 @@ func (p *Problem) create() error {
 }
 
 func (p *Problem) testCases(problemName string) error {
-	fmt.Println("Generating test-cases")
 	err := os.Mkdir("test-cases", 0777)
 	if !os.IsExist(err) {
 		return err
 	}
 
+    cnt := 0
 	for idx, test := range p.Tests {
-		fmt.Println("Creating test:", idx)
+        cnt++
 		testName := problemName + "-" + fmt.Sprint(idx)
 		err = test.create(testName)
 		if err != nil {
 			return err
 		}
 	}
+    fmt.Printf("Created %d tests for problem %s\n", cnt, problemName)
 	return nil
 }
 

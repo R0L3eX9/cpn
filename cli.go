@@ -13,6 +13,8 @@ import (
 type CliCommand int
 
 const (
+    CLI_VERSION = 1.10
+
 	Help CliCommand = iota
 	Run
 	Compile
@@ -24,6 +26,7 @@ const (
 	StressFiles
     TestCases
 	Template
+	Version
 )
 
 func toCliCommand(command string) CliCommand {
@@ -50,6 +53,8 @@ func toCliCommand(command string) CliCommand {
         return TestCases
 	case "template", "temp":
 		return Template
+	case "version", "v":
+		return Version
 	default:
 		return Help
 	}
@@ -133,6 +138,8 @@ func (c *Cli) Execute() {
 		if err != nil {
 			fmt.Println(err)
 		}
+    case Version:
+        c.version()
 	}
 }
 
@@ -392,4 +399,8 @@ func (c *Cli) testCases() error {
     }
     fmt.Printf("Finished all %c Test Cases\n", testIdx)
     return nil
+}
+
+func (* Cli) version() {
+    fmt.Printf("cpn version %.2f\n", CLI_VERSION)
 }
