@@ -87,63 +87,63 @@ func NewCli(file, command string) (*Cli, error) {
 func (c *Cli) Execute() {
 	switch c.Command {
 	case Help:
-		c.help()
+		help()
 	case Run:
-		err := c.run()
+		err := run(c.File, c.FileName)
 		if err != nil {
 			fmt.Println(err)
 		}
 	case Compile:
-		err := c.compile(false)
+		err := compile(c.File, c.FileName, false)
 		if err != nil {
 			fmt.Println(err)
 		}
 	case Debug:
-		err := c.compile(true)
+		err := compile(c.File, c.FileName, true)
 		if err != nil {
 			fmt.Println(err)
 		}
 	case CompileRun:
-		err := c.compileRun()
+		err := compileRun(c.File, c.FileName)
 		if err != nil {
 			fmt.Println(err)
 		}
 	case DebugRun:
-		err := c.debugRun()
+		err := debugRun(c.File, c.FileName)
 		if err != nil {
 			fmt.Println(err)
 		}
 	case Parse:
-		err := c.parse()
+		err := parse()
 		if err != nil {
 			fmt.Println(err)
 		}
 	case StressTest:
-		err := c.stressTest()
+		err := stressTest(c.File, c.FileName)
 		if err != nil {
 			fmt.Println(err)
 		}
 	case StressFiles:
-		err := c.stressFiles()
+		err := stressFiles()
 		if err != nil {
 			fmt.Println(err)
 		}
     case TestCases:
-        err := c.testCases()
+        err := testCases(c.File, c.FileName)
         if err != nil {
             fmt.Println(err)
         }
 	case Template:
-		err := c.template()
+		err := template(c.File)
 		if err != nil {
 			fmt.Println(err)
 		}
     case Version:
-        c.version()
+        version()
 	}
 }
 
-func (c *Cli) help() {
+func help() {
 	fmt.Println("Usage: cpn [command] [file]")
 	fmt.Println()
 	fmt.Println("Commands:")
@@ -161,12 +161,13 @@ func (c *Cli) help() {
 	fmt.Println()
 }
 
-func (c *Cli) run() error {
-	fmt.Println("Running", c.File)
-	cmd := exec.Command("./" + c.FileName)
+func run(file, fileName string) error {
+	fmt.Println("Running", file)
+	cmd := exec.Command("./" + fileName)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
+    cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
 		return errors.New("Couldn't run the program")
@@ -187,15 +188,15 @@ const (
 		" -D_GLIBCXX_DEBUG_PEDANTIC -o"
 )
 
-func (c *Cli) compile(debug bool) error {
-	fmt.Printf("Compiling %s\n", c.File)
+func compile(file, fileName string, debug bool) error {
+	fmt.Printf("Compiling %s\n", file)
 	var cmd *exec.Cmd
 	if debug {
-		flags := DEBUG_FLAGS + " " + c.FileName + " " + c.File
+		flags := DEBUG_FLAGS + " " + fileName + " " + file
 		arg := strings.Split(flags, " ")
 		cmd = exec.Command("g++", arg...)
 	} else {
-		flags := COMPILATION_FLAGS + " " + c.FileName + " " + c.File
+		flags := COMPILATION_FLAGS + " " + fileName + " " + file
 		arg := strings.Split(flags, " ")
 		cmd = exec.Command("g++", arg...)
 	}
@@ -205,28 +206,28 @@ func (c *Cli) compile(debug bool) error {
 	if err != nil {
 		return errors.New(stderr.String())
 	}
-	fmt.Println("Finished compiling", c.File)
+	fmt.Println("Finished compiling", file)
 	return nil
 }
 
-func (c *Cli) compileRun() error {
-	err := c.compile(false)
+func compileRun(file, fileName string) error {
+	err := compile(file, fileName, false)
 	if err != nil {
 		return err
 	}
-	err = c.run()
+	err = run(file, fileName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Cli) debugRun() error {
-	err := c.compile(true)
+func debugRun(file, fileName string) error {
+	err := compile(file, fileName, true)
 	if err != nil {
 		return err
 	}
-	err = c.run()
+	err = run(file, fileName)
 	if err != nil {
 		return err
 	}
@@ -239,7 +240,7 @@ const (
 	SERVER_PORT = "9999"
 )
 
-func (c *Cli) parse() error {
+func parse() error {
 	parser := NewParser(SERVER_TYPE, SERVER_HOST, SERVER_PORT)
 	err := parser.Listen()
 	if err != nil {
@@ -272,8 +273,20 @@ func runStress(file string, out string) error {
 	return nil
 }
 
-func (c *Cli) stressTest() error {
+func stressTest(file, fileName string) error {
 	fmt.Printf("Running in stress test mode\n")
+    err := compile(file, fileName, false)
+    if err != nil {
+        return err
+    }
+    err = compile("brute.cpp", "brute", false)
+    if err != nil {
+        return err
+    }
+    err = compile("gen.cpp", "gen", false)
+    if err != nil {
+        return err
+    }
 	testCase := 0
 	for {
 		fmt.Printf("Running test %d\n", testCase)
@@ -297,7 +310,7 @@ func (c *Cli) stressTest() error {
 			return err
 		}
 
-		err = runStress(c.FileName, "out2")
+		err = runStress(fileName, "out2")
 		if err != nil {
 			return err
 		}
@@ -329,8 +342,8 @@ func (c *Cli) stressTest() error {
 const MAIN_TEMPLATE_PATH = "/home/razvan/Templates/template.cpp"
 const GENERATOR_TEMPLATE_PATH = "/home/razvan/Templates/gen.cpp"
 
-func (c *Cli) template() error {
-	err := FromTemplate(MAIN_TEMPLATE_PATH, c.File)
+func template(file string) error {
+	err := FromTemplate(MAIN_TEMPLATE_PATH, file)
 	if err != nil {
 		return err
 	}
@@ -347,7 +360,7 @@ func FromTemplate(templatePath string, file string) error {
 	return nil
 }
 
-func (c *Cli) stressFiles() error {
+func stressFiles() error {
 	err := FromTemplate(MAIN_TEMPLATE_PATH, "brute.cpp")
 	if err != nil {
 		return err
@@ -360,20 +373,24 @@ func (c *Cli) stressFiles() error {
 	return nil
 }
 
-func (c *Cli) testCases() error {
+func testCases(file, fileName string) error {
+    err := compile(file, fileName, false)
+    if err != nil {
+        return err
+    }
 	fmt.Printf("Running Test Cases\n")
     testIdx := '0'
     for {
-        input, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.in", c.FileName, testIdx))
+        input, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.in", fileName, testIdx))
         if os.IsNotExist(err) {
             break
         }
-        expectedOutput, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.out", c.FileName, testIdx))
+        expectedOutput, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.out", fileName, testIdx))
         if os.IsNotExist(err) {
             break
         }
 
-        cmd := exec.Command(fmt.Sprintf("./%s", c.FileName))
+        cmd := exec.Command(fmt.Sprintf("./%s", fileName))
         stdin := bytes.NewBuffer(input)
         var stdout bytes.Buffer
         var stderr bytes.Buffer
@@ -401,6 +418,6 @@ func (c *Cli) testCases() error {
     return nil
 }
 
-func (* Cli) version() {
+func version() {
     fmt.Printf("cpn version %.2f\n", CLI_VERSION)
 }
