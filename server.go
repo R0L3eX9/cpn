@@ -29,7 +29,7 @@ func (p *Parser) Listen() error {
 	server, err := net.Listen(p.ServerType, p.ServerHost+":"+p.ServerPort)
 
 	if err != nil {
-        log.Println("Server not listening!", err)
+		log.Println("Server not listening!", err)
 		return err
 	}
 
@@ -38,7 +38,7 @@ func (p *Parser) Listen() error {
 	for {
 		connection, err := server.Accept()
 		if err != nil {
-            log.Println("Server didn't accept the request!", err)
+			log.Println("Server didn't accept the request!", err)
 			return err
 		}
 
@@ -50,7 +50,7 @@ func (p *Parser) Listen() error {
 		}()
 
 		if <-errs != nil {
-            log.Println("Error while processing the client!", <-errs)
+			log.Println("Error while processing the client!", <-errs)
 			return <-errs
 		}
 	}
@@ -58,23 +58,23 @@ func (p *Parser) Listen() error {
 
 func processClient(client net.Conn) error {
 	defer client.Close()
-	buffer := make([]byte, 2069)
+	buffer := make([]byte, 3000)
 	_, err := client.Read(buffer)
 	if err != nil {
-        log.Println("Couldn't read buffer", err)
+		log.Println("Couldn't read buffer", err)
 		return err
 	}
 	problem, err := parseData(buffer)
 	if err != nil {
-        log.Println("Couldn't parse the data", err)
+		log.Println("Couldn't parse the data", err)
 		return err
 	}
 	err = problem.create()
 	if err != nil {
-        log.Println("Couldn't create the problem")
+		log.Println("Couldn't create the problem")
 		return err
 	}
-    fmt.Println("Problem created")
+	fmt.Println("Problem created")
 	return nil
 }
 
@@ -128,9 +128,9 @@ func (p *Problem) create() error {
 	} else if atcoderSpecifier != -1 {
 		problemName = p.Name[:atcoderSpecifier-1]
 	}
-	err := FromTemplate(MAIN_TEMPLATE_PATH, problemName + ".cpp")
+	err := FromTemplate(MAIN_TEMPLATE_PATH, problemName+".cpp")
 	if err != nil {
-        log.Println(err)
+		log.Println(err)
 		return err
 	}
 	err = p.testCases(problemName)
@@ -142,20 +142,20 @@ func (p *Problem) create() error {
 
 func (p *Problem) testCases(problemName string) error {
 	err := os.Mkdir("test-cases", 0777)
-	if !os.IsExist(err) {
+	if err != nil && !os.IsExist(err) {
 		return err
 	}
 
-    cnt := 0
+	cnt := 0
 	for idx, test := range p.Tests {
-        cnt++
+		cnt++
 		testName := problemName + "-" + fmt.Sprint(idx)
 		err = test.create(testName)
 		if err != nil {
 			return err
 		}
 	}
-    fmt.Printf("Created %d tests for problem %s\n", cnt, problemName)
+	fmt.Printf("Created %d tests for problem %s\n", cnt, problemName)
 	return nil
 }
 

@@ -13,7 +13,7 @@ import (
 type CliCommand int
 
 const (
-    CLI_VERSION = 1.10
+	CLI_VERSION = 1.10
 
 	Help CliCommand = iota
 	Run
@@ -24,7 +24,7 @@ const (
 	Parse
 	StressTest
 	StressFiles
-    TestCases
+	TestCases
 	Template
 	Version
 )
@@ -49,8 +49,8 @@ func toCliCommand(command string) CliCommand {
 		return StressTest
 	case "stress-files", "sf":
 		return StressFiles
-    case "test-cases", "tc":
-        return TestCases
+	case "test-cases", "tc":
+		return TestCases
 	case "template", "temp":
 		return Template
 	case "version", "v":
@@ -91,55 +91,64 @@ func (c *Cli) Execute() {
 	case Run:
 		err := run(c.File, c.FileName)
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case Compile:
 		err := compile(c.File, c.FileName, false)
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case Debug:
 		err := compile(c.File, c.FileName, true)
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case CompileRun:
 		err := compileRun(c.File, c.FileName)
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case DebugRun:
 		err := debugRun(c.File, c.FileName)
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case Parse:
 		err := parse()
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case StressTest:
 		err := stressTest(c.File, c.FileName)
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
 	case StressFiles:
 		err := stressFiles()
 		if err != nil {
+			// TODO: better error message
 			fmt.Println(err)
 		}
-    case TestCases:
-        err := testCases(c.File, c.FileName)
-        if err != nil {
-            fmt.Println(err)
-        }
+	case TestCases:
+		err := testCases(c.File, c.FileName)
+		if err != nil {
+			// TODO: better error message
+			fmt.Println(err)
+		}
 	case Template:
 		err := template(c.File)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("Couldn't create from template file due to: %s\n", err)
 		}
-    case Version:
-        version()
+	case Version:
+		version()
 	}
 }
 
@@ -155,7 +164,7 @@ func help() {
 	fmt.Println("  debug-run, dr: Compile and run the program in debug mode")
 	fmt.Println("  parse: Parse the problem using Competitive Companion")
 	fmt.Println("  stress-test, st: Run the program in stress test mode")
-    fmt.Println("  stress-files, sf: Generate files needed for stress testing")
+	fmt.Println("  stress-files, sf: Generate files needed for stress testing")
 	fmt.Println("  test-cases, tc: Test your program against parsed test-cases")
 	fmt.Println("  template: Generate a file from personal template")
 	fmt.Println()
@@ -167,7 +176,7 @@ func run(file, fileName string) error {
 
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
-    cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
 		return errors.New("Couldn't run the program")
@@ -275,18 +284,18 @@ func runStress(file string, out string) error {
 
 func stressTest(file, fileName string) error {
 	fmt.Printf("Running in stress test mode\n")
-    err := compile(file, fileName, false)
-    if err != nil {
-        return err
-    }
-    err = compile("brute.cpp", "brute", false)
-    if err != nil {
-        return err
-    }
-    err = compile("gen.cpp", "gen", false)
-    if err != nil {
-        return err
-    }
+	err := compile(file, fileName, false)
+	if err != nil {
+		return err
+	}
+	err = compile("brute.cpp", "brute", false)
+	if err != nil {
+		return err
+	}
+	err = compile("gen.cpp", "gen", false)
+	if err != nil {
+		return err
+	}
 	testCase := 0
 	for {
 		fmt.Printf("Running test %d\n", testCase)
@@ -328,19 +337,19 @@ func stressTest(file, fileName string) error {
 			fmt.Println("Test case failed:")
 			fmt.Println(input.String())
 			fmt.Println("Expected:")
-            fmt.Println(out1)
+			fmt.Println(out1)
 			fmt.Println("Got:")
-            fmt.Println(out2)
-            break
+			fmt.Println(out2)
+			break
 		}
 		testCase++
 	}
-    return nil
+	return nil
 }
 
 // TODO: read from config file
-const MAIN_TEMPLATE_PATH = "/home/razvan/Templates/template.cpp"
-const GENERATOR_TEMPLATE_PATH = "/home/razvan/Templates/gen.cpp"
+const MAIN_TEMPLATE_PATH = "/home/r3zv/Templates/template.cpp"
+const GENERATOR_TEMPLATE_PATH = "/home/r3zv/Templates/gen.cpp"
 
 func template(file string) error {
 	err := FromTemplate(MAIN_TEMPLATE_PATH, file)
@@ -352,10 +361,14 @@ func template(file string) error {
 
 func FromTemplate(templatePath string, file string) error {
 	fmt.Printf("Generating %s\n", file)
+
 	cmd := exec.Command("cp", templatePath, file)
+	var stderr bytes.Buffer
+    cmd.Stderr = &stderr
+
 	err := cmd.Run()
 	if err != nil {
-		return err
+		return errors.New(stderr.String())
 	}
 	return nil
 }
@@ -374,50 +387,50 @@ func stressFiles() error {
 }
 
 func testCases(file, fileName string) error {
-    err := compile(file, fileName, false)
-    if err != nil {
-        return err
-    }
+	err := compile(file, fileName, false)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("Running Test Cases\n")
-    testIdx := '0'
-    for {
-        input, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.in", fileName, testIdx))
-        if os.IsNotExist(err) {
-            break
-        }
-        expectedOutput, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.out", fileName, testIdx))
-        if os.IsNotExist(err) {
-            break
-        }
+	testIdx := '0'
+	for {
+		input, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.in", fileName, testIdx))
+		if os.IsNotExist(err) {
+			break
+		}
+		expectedOutput, err := os.ReadFile(fmt.Sprintf("./test-cases/%s-%c.out", fileName, testIdx))
+		if os.IsNotExist(err) {
+			break
+		}
 
-        cmd := exec.Command(fmt.Sprintf("./%s", fileName))
-        stdin := bytes.NewBuffer(input)
-        var stdout bytes.Buffer
-        var stderr bytes.Buffer
-        cmd.Stdin = stdin
-        cmd.Stdout = &stdout
-        cmd.Stderr = &stderr
-        err = cmd.Run()
-        if err != nil {
-            log.Println(stderr)
-        }
+		cmd := exec.Command(fmt.Sprintf("./%s", fileName))
+		stdin := bytes.NewBuffer(input)
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdin = stdin
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			log.Println(stderr)
+		}
 
-        userOutput := stdout.String()
-        if userOutput != string(expectedOutput) {
-            fmt.Printf("Failed on test %c\n", testIdx)
-            fmt.Println("Expected:")
-            fmt.Println(string(expectedOutput))
-            fmt.Println("Got:")
-            fmt.Println(userOutput)
-            break
-        }
-        fmt.Printf("Test %c passed!\n", testIdx)
-        testIdx++
-    }
-    fmt.Printf("Finished all %c Test Cases\n", testIdx)
-    return nil
+		userOutput := stdout.String()
+		if userOutput != string(expectedOutput) {
+			fmt.Printf("Failed on test %c\n", testIdx)
+			fmt.Println("Expected:")
+			fmt.Println(string(expectedOutput))
+			fmt.Println("Got:")
+			fmt.Println(userOutput)
+			break
+		}
+		fmt.Printf("Test %c passed!\n", testIdx)
+		testIdx++
+	}
+	fmt.Printf("Finished all %c Test Cases\n", testIdx)
+	return nil
 }
 
 func version() {
-    fmt.Printf("cpn version %.2f\n", CLI_VERSION)
+	fmt.Printf("cpn version %.2f\n", CLI_VERSION)
 }
